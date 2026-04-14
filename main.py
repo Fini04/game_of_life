@@ -1,20 +1,32 @@
+import configparser
+from logging import config
+import os
 import random
 import time
 
-ROWS = 20
-COLS = 40
+config = configparser.ConfigParser()  # noqa: F811
+config.read("settings.ini")
+
+ROWS = config.getint("game", "rows")
+COLS = config.getint("game", "columns")
+DEAD = 0
+ALIVE = 1
 
 def create_random_grid(rows, cols):
-    return [[random.randint(0,1) for _ in range(cols)] for _ in range(rows)]
+    return [[random.randint(DEAD, ALIVE) for _ in range(cols)] for _ in range(rows)]
 
 def create_empty_grid(rows, cols):
-    return [[0 for _ in range(cols)] for _ in range(rows)]
+    return [[DEAD for _ in range(cols)] for _ in range(rows)]
 
-def print_grid(grid):
+def print_grid(grid, generation=None):
+    if generation is not None:
+        print(f"Generation: {generation}")
+    print("-" * len(grid[0]))
     for rows in grid:
         print("".join("O" if cell else " " for cell in rows))
+    print("-" * len(grid[0]))
 
-def get_amount_of_neighbors(grid, row: int, col: int):
+def amount_of_neighbors(grid, row: int, col: int):
     amount = 0
     for r in (-1, 0, 1):
         for c in (-1, 0, 1):
@@ -26,23 +38,24 @@ def get_amount_of_neighbors(grid, row: int, col: int):
                 amount += grid[target_row][target_col]
     return amount
 
-def get_next_generation(grid):
+def next_generation(grid):
     rows = len(grid)
     cols = len(grid[0])
     next_grid = create_empty_grid(rows, cols)
     for row in range(rows):
         for col in range(cols):
-            neighbors = get_amount_of_neighbors(grid, row, col)
+            neighbors = amount_of_neighbors(grid, row, col)
             if grid[row][col] and (neighbors == 2 or neighbors == 3):
-                next_grid[row][col] = 1
+                next_grid[row][col] = ALIVE
             if (not grid[row][col]) and neighbors == 3:
-                next_grid[row][col] = 1
+                next_grid[row][col] = ALIVE
     return next_grid
 
-GENERATIONS = 100
+GENERATIONS = config.getint("game", "generations")
+GENERATION_DELAY = config.getfloat("game", "generation_delay")
 grid = create_random_grid(ROWS, COLS)
 for i in range(GENERATIONS):
-    time.sleep(0.1)
-    print(f"Generation: {i}")
-    print_grid(grid)
-    grid = get_next_generation(grid)
+    time.sleep(GENERATION_DELAY)
+    os.system("cls" if os.name == "nt" else "clear")
+    print_grid(grid, generation=i)
+    grid = next_generation(grid)
