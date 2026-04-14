@@ -26,6 +26,30 @@ def print_grid(grid, generation=None):
         print("".join("O" if cell else " " for cell in rows))
     print("-" * len(grid[0]))
 
+def read_grid_from_file(file_path):
+    with open(file_path, "rt") as f:
+        lines = f.readlines()
+    grid = []
+    for line in lines:
+        row = [ALIVE if char == "O" else DEAD for char in line]
+        grid.append(row)
+    return grid
+
+def insert_on_grid(grid, pattern, top_left_row = 0, top_left_col = 0):
+    if top_left_row < 0 or top_left_col < 0:
+        raise ValueError("Top left row and column must be non-negative.")
+    if top_left_row >= len(grid) or top_left_col >= len(grid[0]):
+        raise ValueError("Top left row and column must be within the grid.")
+    if top_left_row + len(pattern) > len(grid) or top_left_col + len(pattern[0]) > len(grid[0]):
+        raise ValueError("Pattern does not fit within the grid at the specified position.")
+    
+    for r, row in enumerate(pattern):
+        for c, cell in enumerate(row):
+            target_row = top_left_row + r
+            target_col = top_left_col + c
+            if 0 <= target_row < len(grid) and 0 <= target_col < len(grid[0]):
+                grid[target_row][target_col] = cell
+
 def amount_of_neighbors(grid, row: int, col: int):
     amount = 0
     for r in (-1, 0, 1):
